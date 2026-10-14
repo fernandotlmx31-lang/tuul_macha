@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tuul Garden Kitchen · Punto de venta</title>
+<meta name="description" content="Ventas, gastos, créditos y reportes de Tuul Garden Kitchen">
+<meta name="theme-color" content="#2F5233">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tuul POS">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div>
+      <div class="brand" id="brandName" contenteditable="true" spellcheck="false" role="textbox" aria-label="Nombre del negocio">Tuul Garden Kitchen</div>
+      <div class="brand-sub" id="todayLabel"></div>
+    </div>
+    <div class="top-stats">
+      <div class="today-stat">
+        <div class="label">Por cobrar</div>
+        <div class="value ink" id="pendingTotal">$0.00</div>
+      </div>
+      <div class="today-stat">
+        <div class="label">Neto de hoy</div>
+        <div class="value" id="todayNet">$0.00</div>
+      </div>
+    </div>
+  </div>
+  <nav class="tabs" id="tabsNav">
+    <button data-tab="vender" class="active">Vender</button>
+    <button data-tab="gastos">Gastos</button>
+    <button data-tab="creditos" id="tabCreditos">Por cobrar</button>
+    <button data-tab="reportes">Reportes</button>
+    <button data-tab="productos">Productos</button>
+  </nav>
+</header>
+
+<main>
+  <div id="connBanner" class="banner" style="display:none;"></div>
+
+  <!-- VENDER -->
+  <section class="view active" id="view-vender">
+    <div class="vender-grid">
+      <div>
+        <h2 class="section-title">Elige los productos</h2>
+        <div id="productGrid"></div>
+      </div>
+      <div class="receipt-wrap">
+        <div class="receipt">
+          <p class="receipt-title">Ticket actual</p>
+          <p class="receipt-date" id="ticketDate"></p>
+          <div id="receiptBody"></div>
+        </div>
+        <div class="receipt-zigzag"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GASTOS -->
+  <section class="view" id="view-gastos">
+    <h2 class="section-title">Registrar un gasto</h2>
+    <div class="card" style="margin-bottom:22px;">
+      <div class="form-row">
+        <div class="field" style="flex:2;">
+          <label for="expDesc">Descripción</label>
+          <input type="text" id="expDesc" placeholder="Ej. Lechuga y jitomate">
+        </div>
+        <div class="field">
+          <label for="expCat">Categoría</label>
+          <select id="expCat">
+            <option>Ingredientes</option>
+            <option>Empaque</option>
+            <option>Transporte</option>
+            <option>Servicios</option>
+            <option>Otros</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="expAmount">Monto (MXN)</label>
+          <input type="number" id="expAmount" min="0" step="0.5" placeholder="0.00">
+        </div>
+        <div class="field">
+          <label for="expDate">Fecha</label>
+          <input type="date" id="expDate">
+        </div>
+      </div>
+      <button class="btn-primary" id="btnAddExpense">Agregar gasto</button>
+    </div>
+
+    <h2 class="section-title">Gastos recientes</h2>
+    <div class="card scroll-x">
+      <table class="list" id="expenseTable">
+        <thead><tr><th>Fecha</th><th>Descripción</th><th>Categoría</th><th>Monto</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p class="empty-note" id="expenseEmpty" style="display:none;">Aún no registras gastos.</p>
+    </div>
+  </section>
+
+  <!-- POR COBRAR -->
+  <section class="view" id="view-creditos">
+    <h2 class="section-title">Ventas a crédito</h2>
+    <div class="stat-row" id="creditSummary"></div>
+
+    <div class="card" style="margin-bottom:22px;">
+      <div class="row-between"><strong style="font-size:0.92rem;">Pendientes de pago</strong></div>
+      <div id="creditList"></div>
+      <p class="empty-note" id="creditEmpty" style="display:none;">No tienes cobros pendientes.</p>
+    </div>
+
+    <div class="card">
+      <div class="row-between"><strong style="font-size:0.92rem;">Pagados recientemente</strong></div>
+      <div id="creditPaidList"></div>
+      <p class="empty-note" id="creditPaidEmpty" style="display:none;">Aún no hay créditos pagados.</p>
+    </div>
+  </section>
+
+  <!-- REPORTES -->
+  <section class="view" id="view-reportes">
+    <h2 class="section-title">Reportes</h2>
+    <div class="period-tabs" id="periodTabs">
+      <button data-p="hoy" class="active">Hoy</button>
+      <button data-p="semana">Esta semana</button>
+      <button data-p="mes">Este mes</button>
+      <button data-p="rango">Rango</button>
+      <button class="btn-secondary" id="btnExportCsv" style="margin-left:auto; border-radius:20px;">Descargar CSV</button>
+    </div>
+    <div class="range-pickers" id="rangePickers" style="display:none;">
+      <div class="field"><label for="rangeFrom">Desde</label><input type="date" id="rangeFrom"></div>
+      <div class="field"><label for="rangeTo">Hasta</label><input type="date" id="rangeTo"></div>
+    </div>
+
+    <div class="stat-row" id="statRow"></div>
+
+    <div class="card" id="dayBarsCard" style="margin-bottom:22px; display:none;">
+      <div class="row-between"><strong style="font-size:0.92rem;">Ventas por día</strong></div>
+      <div class="bars" id="dayBars"></div>
+    </div>
+
+    <div class="card" style="margin-bottom:22px;">
+      <div class="row-between"><strong style="font-size:0.92rem;">Productos más vendidos</strong></div>
+      <div class="rank-list" id="rankList"></div>
+      <p class="empty-note" id="rankEmpty" style="display:none;">No hay ventas en este periodo.</p>
+    </div>
+
+    <div class="card">
+      <div class="row-between"><strong style="font-size:0.92rem;">Movimientos</strong></div>
+      <div id="txList"></div>
+      <p class="empty-note" id="txEmpty" style="display:none;">No hay movimientos en este periodo.</p>
+    </div>
+  </section>
+
+  <!-- PRODUCTOS -->
+  <section class="view" id="view-productos">
+    <h2 class="section-title">Agregar producto</h2>
+    <div class="card" style="margin-bottom:22px;">
+      <div class="form-row">
+        <div class="field" style="flex:2;">
+          <label for="prodName">Nombre</label>
+          <input type="text" id="prodName" placeholder="Ej. Ensalada César">
+        </div>
+        <div class="field">
+          <label for="prodCat">Categoría</label>
+          <input type="text" id="prodCat" placeholder="Ej. Ensaladas" list="catList">
+          <datalist id="catList"></datalist>
+        </div>
+        <div class="field">
+          <label for="prodPrice">Precio (MXN)</label>
+          <input type="number" id="prodPrice" min="0" step="0.5" placeholder="0.00">
+        </div>
+      </div>
+      <button class="btn-primary" id="btnAddProduct">Agregar producto</button>
+    </div>
+
+    <div class="row-between">
+      <h2 class="section-title" style="margin-bottom:0;">Tu catálogo</h2>
+    </div>
+    <div class="card scroll-x">
+      <table class="list" id="productTable">
+        <thead><tr><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Activo</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="empty-note" id="productEmpty" style="display:none;">
+        Aún no tienes productos.<br>
+        <button class="btn-secondary" id="btnSeedProducts">Cargar productos de ejemplo</button>
+      </div>
+    </div>
+
+    <h2 class="section-title" style="margin-top:26px;">Respaldo de tus datos</h2>
+    <div class="card">
+      <p style="margin:0 0 12px; font-size:0.9rem; color:var(--ink-soft);">
+        Tus ventas y gastos se guardan en este navegador y dispositivo. Descarga un respaldo
+        seguido, para no perderlos si borras los datos del navegador o cambias de equipo.
+      </p>
+      <div class="form-row" style="margin-bottom:0;">
+        <button class="btn-primary" id="btnBackup">Descargar respaldo</button>
+        <button class="btn-secondary" id="btnRestore">Restaurar respaldo…</button>
+        <input type="file" id="restoreFile" accept="application/json,.json" style="display:none;">
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="storage.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
